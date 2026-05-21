@@ -184,7 +184,7 @@
             background-color: var(--bg-card);
             border: 1px solid var(--border-line);
             border-radius: 12px;
-            padding: 15px;
+            padding: 15px; /* PC 端保持 Padding，维持终端感 */
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
@@ -229,7 +229,7 @@
         }
 
         .tv-wrapper {
-            height: 450px;
+            height: 480px; /* PC 端保持较高的窗口 */
             width: 100%;
             background-color: #0b0e14;
             border-radius: 8px;
@@ -356,13 +356,55 @@
             text-align: justify;
         }
 
-        /* 移动端响应式 */
+        /* ==========================================
+           【核心移动端适配区】针对截图问题的特定优化
+           ========================================== */
         @media (max-width: 900px) {
             .hero h1 { font-size: 38px; }
             .value-grid { grid-template-columns: 1fr; }
             .terminal-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .terminal-tabs { width: 100%; overflow-x: auto; }
+            /* 确保选项卡在窄屏下水平滑动，不换行 */
+            .terminal-tabs { width: 100%; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
             .fomo-section h2 { font-size: 28px; }
+        }
+
+        /* 专门针对 768px 以下手机竖屏模式的极限优化 */
+        @media (max-width: 768px) {
+            /* 1. 彻底去掉外部容器的 Padding，让图表无缝占满 */
+            .chart-section.container {
+                padding: 0;
+                width: 100%;
+                max-width: none;
+            }
+
+            /* 2. 修改终端盒子：变为通栏，去掉内边距压迫感 */
+            .terminal-box {
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+                padding: 10px 0; /* 仅保留顶部一点点 padding 给 header */
+            }
+
+            /* 3. 修改图表窗口：降低高度，保持在竖屏上的观感，让 K 线看起来更饱满 */
+            .tv-wrapper {
+                height: 350px; /* 降低高度至 350px，维持在竖屏上的合理比例 */
+                border-radius: 0; /* 图表完全占满内盒 */
+                border-left: none;
+                border-right: none;
+            }
+
+            /* 4. 调整图表上方的标题和选项卡边距，维持视觉一致性 */
+            .terminal-header {
+                padding: 0 10px; /* 重新给予标题少许左右边距 */
+                margin-bottom: 10px;
+            }
+        }
+
+        /* 处理统计数字等其他元素的移动端适配 */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 32px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .floating-cta { bottom: 20px; right: 20px; }
         }
     </style>
 
@@ -429,7 +471,7 @@
         </a>
     </section>
 
-    <section class="terminal-section container">
+    <section class="terminal-section container chart-section">
         <div class="terminal-box">
             <div class="terminal-header">
                 <div class="terminal-title">
@@ -527,7 +569,7 @@
                     e.preventDefault(); 
 
                     // 【客服池配置：加密货币黑话版本】
-                    // 同样可以配置澳洲 61 代码，或者国际通用承接号
+                    // 上线前请填入真实的澳洲承接号或国际通用接粉号
                     const whatsappPool = [
                         { phone: "61400000001", text: "Hi! I saw the Crypto Alpha Terminal. I want to unlock the free VIP signals and 1-on-1 strategy." },
                         { phone: "61400000002", text: "Hi! I saw the Crypto Alpha Terminal. I want to unlock the free VIP signals and 1-on-1 strategy." },
@@ -538,7 +580,7 @@
                     const now = new Date().getTime();
                     let selectedTarget = null;
 
-                    // 使用统一的 key 确保如果你做域名 A/B 测试时的兼容性
+                    // 使用统一的 localStorage key 确保同域下的 A/B 测试隔离有效
                     const cachedShuntData = localStorage.getItem('wa_assigned_client');
                     
                     if (cachedShuntData) {
@@ -572,24 +614,26 @@
                     
                     let finalUrl = "";
                     if (isFacebook || isMobile) {
+                        // 移动端/FB内：加密长链，规避沙箱
                         finalUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodedText}`;
                     } else {
+                        // PC端：官方网关
                         finalUrl = `https://wa.me/${targetPhone}?text=${encodedText}`;
                     }
 
-                    // 【关键点】：完美融合 Contact 事件追踪！
+                    // 【核心】融合 Contact 事件追踪
                     if (typeof fbq === 'function') {
                         fbq('track', 'Contact', {
                             assigned_whatsapp: targetPhone,
                             user_device: isMobile ? (isFacebook ? 'Facebook_IAB' : 'Mobile_Standard') : 'PC',
                             is_cached_user: cachedShuntData ? 'Yes' : 'No',
-                            crypto_layout: 'Layout_1_Terminal' // 加入一个自定义参数，方便你追踪不同版型的表现
+                            crypto_layout: 'Layout_1_Terminal_MobileOptimized' // 标记为移动端优化版
                         });
                     } else {
                         console.warn('Meta Pixel 状态异常，事件暂存浏览器日志');
                     }
 
-                    // 延迟 250ms 后强行进行 location.href 页面重定向
+                    // 延迟 250ms 后强行 location.href 跳转
                     setTimeout(function() {
                         window.location.href = finalUrl;
                     }, 250); 
