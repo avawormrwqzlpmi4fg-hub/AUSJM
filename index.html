@@ -229,7 +229,7 @@
         }
 
         .tv-wrapper {
-            height: 480px; 
+            height: 550px; /* PC 端大屏高度 */
             width: 100%;
             background-color: #0b0e14;
             border-radius: 8px;
@@ -357,7 +357,7 @@
         }
 
         /* ==========================================
-           【核心移动端适配区】针对窄屏的精细化重构
+           【核心移动端适配区】
            ========================================== */
         @media (max-width: 900px) {
             .hero h1 { font-size: 42px; }
@@ -368,17 +368,13 @@
 
         /* 专门针对手机竖屏模式的极限优化 */
         @media (max-width: 768px) {
-            /* 导航栏缩小 */
             .brand { font-size: 20px; }
             .live-status { font-size: 10px; padding: 4px 10px; }
-
-            /* 首屏文字排版更紧凑 */
             .hero { padding: 40px 0 30px 0; }
             .hero h1 { font-size: 34px; margin-bottom: 15px; }
             .hero p { font-size: 15px; margin-bottom: 25px; padding: 0 5px; }
             .hero-badge { margin-bottom: 15px; }
 
-            /* 按钮尺寸调整 */
             .btn-whatsapp {
                 font-size: 16px;
                 padding: 16px 20px;
@@ -386,40 +382,27 @@
             .btn-whatsapp i { font-size: 22px; margin-right: 8px; }
 
             /* ===================================================
-               修复 1：K线图太拥挤问题
-               取消强行无边距，恢复卡片质感，并大幅拉升图表高度
+               修复核心：动态视口高度 (vh)
+               确保图表在任何尺寸的手机上都占据至少 55% 的屏幕高度
                =================================================== */
-            .chart-section.container {
-                padding: 0 15px; /* 恢复左右呼吸空间 */
-            }
-            .terminal-box {
-                padding: 15px 12px;
-                border-radius: 12px; /* 恢复卡片圆角 */
-            }
+            .chart-section.container { padding: 0 15px; }
+            .terminal-box { padding: 15px 12px; border-radius: 12px; }
+            
             .tv-wrapper {
-                height: 480px; /* 大幅拔高图表，让 K 线和指标有充足展示空间 */
+                height: 55vh; /* 魔法代码：动态占据屏幕高度的 55% */
+                min-height: 420px; /* 兜底机制：即使在老款小屏手机上也不会低于420px */
                 border-radius: 6px;
             }
 
-            /* ===================================================
-               修复 2：FOMO 模块机械拉伸、压迫感太强问题
-               改为一个精美的圆角卡片，调整内外边距和字号
-               =================================================== */
-            .fomo-section {
-                padding: 40px 20px; 
-                margin: 0 15px 40px 15px; /* 增加外边距，不再是一堵墙 */
-                border-radius: 16px; /* 卡片化 */
-            }
+            .fomo-section { padding: 40px 20px; margin: 0 15px 40px 15px; border-radius: 16px; }
             .fomo-section h2 { font-size: 26px; line-height: 1.3; margin-bottom: 10px; }
             .fomo-section p { font-size: 15px; margin-bottom: 25px; }
             .btn-black { font-size: 15px; padding: 16px 15px; }
 
-            /* 价值主张卡片间距调整 */
             .value-card { padding: 25px 20px; }
             .value-icon { font-size: 28px; margin-bottom: 15px; }
             .value-card h3 { font-size: 18px; }
 
-            /* 悬浮按钮位置微调防遮挡 */
             .floating-cta { bottom: 20px; right: 20px; }
             .btn-float { width: 54px; height: 54px; font-size: 30px; }
         }
@@ -548,13 +531,12 @@
     </footer>
 
     <script type="text/javascript">
-        // 1. TradingView 加密货币 K线引擎
         function loadCryptoChart(symbol) {
             new TradingView.widget({
                 "width": "100%",
                 "height": "100%",
                 "symbol": symbol,
-                "interval": "60", // 加密货币看重短时效，默认展示 1小时线
+                "interval": "60", 
                 "timezone": "Etc/UTC",
                 "theme": "dark",
                 "style": "1", 
@@ -575,18 +557,13 @@
             loadCryptoChart(symbol);
         }
 
-        // 2. FB 广告环境专用优化版：多客服分流 + 本地记忆锁 + 强效追踪事件
         document.addEventListener('DOMContentLoaded', function() {
-            // 全域批量抓取 WhatsApp 按钮
             const waButtons = document.querySelectorAll('.btn-whatsapp, .btn-float');
 
             waButtons.forEach(function(button) {
                 button.addEventListener('click', function(e) {
-                    // 阻断默认跳转，确保 Meta Pixel 追踪时间
                     e.preventDefault(); 
 
-                    // 【客服池配置：加密货币黑话版本】
-                    // 同样可以配置澳洲 61 代码，或者国际通用承接号
                     const whatsappPool = [
                         { phone: "61400000001", text: "Hi! I saw the Crypto Alpha Terminal. I want to unlock the free VIP signals and 1-on-1 strategy." },
                         { phone: "61400000002", text: "Hi! I saw the Crypto Alpha Terminal. I want to unlock the free VIP signals and 1-on-1 strategy." },
@@ -597,7 +574,6 @@
                     const now = new Date().getTime();
                     let selectedTarget = null;
 
-                    // 使用统一的 key 确保如果你做域名 A/B 测试时的兼容性
                     const cachedShuntData = localStorage.getItem('wa_assigned_client');
                     
                     if (cachedShuntData) {
@@ -636,19 +612,17 @@
                         finalUrl = `https://wa.me/${targetPhone}?text=${encodedText}`;
                     }
 
-                    // 【关键点】：完美融合 Contact 事件追踪！
                     if (typeof fbq === 'function') {
                         fbq('track', 'Contact', {
                             assigned_whatsapp: targetPhone,
                             user_device: isMobile ? (isFacebook ? 'Facebook_IAB' : 'Mobile_Standard') : 'PC',
                             is_cached_user: cachedShuntData ? 'Yes' : 'No',
-                            crypto_layout: 'Layout_1_Terminal' 
+                            crypto_layout: 'Layout_1_Terminal_Mobile_Max' 
                         });
                     } else {
                         console.warn('Meta Pixel 状态异常，事件暂存浏览器日志');
                     }
 
-                    // 延迟 250ms 后强行进行 location.href 页面重定向
                     setTimeout(function() {
                         window.location.href = finalUrl;
                     }, 250); 
@@ -656,7 +630,6 @@
             });
         });
 
-        // 初始化加载比特币图表
         window.onload = function() {
             loadCryptoChart('BINANCE:BTCUSDT');
         };
